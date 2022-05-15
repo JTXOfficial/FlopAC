@@ -1,0 +1,47 @@
+package me.jtx.flopac.checks.movement.phase;
+
+import me.jtx.flopac.base.check.api.Check;
+import me.jtx.flopac.base.check.api.CheckInformation;
+import me.jtx.flopac.base.event.PacketEvent;
+import me.jtx.flopac.base.user.User;
+import me.jtx.flopac.tinyprotocol.api.Packet;
+
+@CheckInformation(checkName = "Phase", checkType = "B", punishmentVL = 3)
+public class PhaseB extends Check {
+
+    @Override
+    public void onPacket(PacketEvent event) {
+        User user = event.getUser();
+
+        switch (event.getType()) {
+            case Packet.Client.FLYING:
+            case Packet.Client.LOOK:
+            case Packet.Client.POSITION_LOOK:
+            case Packet.Client.POSITION: {
+
+                if (user.shouldCancel()
+                        || user.getLastTeleportTimer().hasNotPassed(20)
+                        || user.getMovementProcessor().isBouncedOnSlime()
+                        || user.getActionProcessor().getServerPositionTimer().hasNotPassed(5)
+                        || user.getBlockData().slimeTimer.hasNotPassed(20)
+                        || !user.isChunkLoaded()
+                        || user.getTick() < 60) {
+                    return;
+                }
+
+                double deltaY = user.getMovementProcessor().getDeltaY();
+                double lastDeltaY = user.getMovementProcessor().getLastDeltaY();
+
+              //  double jumpHeight = 0.42F + (user.getPotionProcessor().getJumpAmplifier() * 0.1F);
+
+                if (user.getMovementProcessor().getAirTicks() <= 6 && !user.getMovementProcessor().isOnGround()) {
+                    if (deltaY < -0.7 && lastDeltaY < 0.42f || deltaY > 0.7 && lastDeltaY < 0.42f) {
+                        flag(user, "Possibly VClipping");
+                    }
+                }
+
+                break;
+            }
+        }
+    }
+}

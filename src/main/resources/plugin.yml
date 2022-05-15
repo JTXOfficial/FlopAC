@@ -1,0 +1,9 @@
+name: FlopAC
+version: 1.0.0
+main: me.jtx.flopac.FlopAC
+description: FlopAC is an anti-cheat plugin that prevents players from cheating.
+authors:
+  - JTX
+  - DemonDxv
+  - Rhys
+  - funkemunky

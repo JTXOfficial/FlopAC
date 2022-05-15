@@ -1,0 +1,49 @@
+package me.jtx.flopac.base.command.commands.sub;
+
+import me.jtx.flopac.FlopAC;
+import me.jtx.flopac.base.check.api.Check;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
+
+public class ChecksCommand {
+
+    public void execute(String[] args, String s, CommandSender commandSender) {
+        if (args.length >= 2) {
+            String checkName = args[1];
+
+            if (checkName.length() > 0) {
+                Check foundCheck = FlopAC.getInstance().getCheckManager().getCheckList().stream().filter(check ->
+                        checkName.equalsIgnoreCase(check.getFriendlyName())).findAny().orElse(null);
+
+                if (foundCheck != null) {
+
+                    if (foundCheck.isEnabled()) {
+                        commandSender.sendMessage(ChatColor.RED + "Disabled the check " + ChatColor.GREEN
+                                + foundCheck.getFriendlyName());
+                    } else {
+                        commandSender.sendMessage(ChatColor.GREEN + "Enabled the check " + ChatColor.GREEN
+                                + foundCheck.getFriendlyName());
+                    }
+
+                    foundCheck.setEnabled(!foundCheck.isEnabled());
+
+                    FlopAC.getInstance().getExecutorService().execute(() -> {
+                        //Disable the current check for everyone else
+                        FlopAC.getInstance().getUserManager().getUserMap().forEach((uuid, user) ->
+                                user.getCheckManager().getCheckList().forEach(check -> {
+
+                                    if (check.getFriendlyName().equalsIgnoreCase(foundCheck.getFriendlyName())) {
+                                        check.setEnabled(foundCheck.isEnabled());
+                                    }
+
+                                    FlopAC.getInstance().getCheckManager().saveChecks();
+                                }));
+                    });
+                } else {
+                    commandSender.sendMessage(ChatColor.RED + "Unable to find the check "
+                            + ChatColor.GRAY + checkName);
+                }
+            }
+        }
+    }
+}
